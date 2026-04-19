@@ -1,0 +1,13 @@
+# 忽略包含敏感信息的文件
+config.json
+git_sync.ps1
+1.py
+
+# 忽略程序生成的中间缓存
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 忽略本地开发环境工具
+.vscode/
+.idea/
