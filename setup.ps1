@@ -1,4 +1,4 @@
-# setup.ps1 - Cloudflare IP 优选工具一键部署脚本
+﻿# setup.ps1 - Cloudflare IP 优选工具一键部署脚本
 # 功能：
 #   1. 检测并安装依赖 (Python3, Git, curl, requests)
 #   2. 自动创建 .gitignore 保护敏感信息

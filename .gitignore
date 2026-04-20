@@ -1,4 +1,10 @@
+﻿# 敏感配置文件
 config.json
 git_sync.ps1
-git_sync.sh
+
+# Python 缓存
 __pycache__/
+*.pyc
+
+# 运行结果
+ip.txt
