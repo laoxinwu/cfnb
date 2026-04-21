@@ -4,16 +4,16 @@
     "USE_GLOBAL_MODE": true,
     "_comment_USE_GLOBAL_MODE": "true=全局最优16个；false=每个国家最优1个",
 
-    "GLOBAL_TOP_N": 16,
+    "GLOBAL_TOP_N": 15,
     "_comment_GLOBAL_TOP_N": "全局模式下最终保留的节点数量",
 
     "PER_COUNTRY_TOP_N": 1,
     "_comment_PER_COUNTRY_TOP_N": "分国家模式下每个国家保留的节点数量",
 
-    "BANDWIDTH_CANDIDATES": 80,
+    "BANDWIDTH_CANDIDATES": 45,
     "_comment_BANDWIDTH_CANDIDATES": "进入带宽测速的候选节点数（从TCP通过者中选取前N个）",
 
-    "TCP_PROBES": 7,
+    "TCP_PROBES": 5,
     "_comment_TCP_PROBES": "每个节点测试 TCP 连接的次数",
 
     "MIN_SUCCESS_RATE": 1.0,
@@ -40,6 +40,9 @@
     "WXPUSHER_API_URL": "http://wxpusher.zjiecode.com/api/send/message",
     "_comment_WXPUSHER_API_URL": "WxPusher 消息发送 API 地址（一般无需修改）",
 
+    "NOTIFY_TIMEOUT": 5,
+    "_comment_NOTIFY_TIMEOUT": "微信通知 API 请求超时（秒）",
+
     "_comment_cf_dns": "Cloudflare DNS 批量更新配置",
     "CF_ENABLED": true,
     "CF_API_TOKEN": "your_CF_API_TOKEN",
@@ -50,6 +53,15 @@
 
     "JSON_URL": "https://zip.cm.edu.kg/all.txt",
     "_comment_JSON_URL": "Cloudflare IP 节点数据源（txt格式，每行 IP:端口#国家）",
+
+    "FETCH_MAX_RETRIES": 3,
+    "_comment_FETCH_MAX_RETRIES": "获取节点列表失败时的最大重试次数",
+
+    "FETCH_RETRY_DELAY": 5,
+    "_comment_FETCH_RETRY_DELAY": "获取节点列表重试间隔（秒）",
+
+    "FETCH_TIMEOUT": 5,
+    "_comment_FETCH_TIMEOUT": "获取节点列表单次请求超时（秒）",
 
     "OUTPUT_FILE": "ip.txt",
     "_comment_OUTPUT_FILE": "最终结果保存的文件名",
@@ -63,7 +75,7 @@
     "AVAILABILITY_CHECK_API": "https://check-proxyip-api.cmliussss.net/check",
     "_comment_AVAILABILITY_CHECK_API": "IP 可用性检测 API 地址",
 
-    "AVAILABILITY_TIMEOUT": 8,
+    "AVAILABILITY_TIMEOUT": 5,
     "_comment_AVAILABILITY_TIMEOUT": "可用性 API 请求超时（秒）",
 
     "AVAILABILITY_RETRY_MAX": 2,
@@ -87,16 +99,19 @@
     "BANDWIDTH_URL_TEMPLATE": "https://speed.cloudflare.com/__down?bytes={bytes}",
     "_comment_BANDWIDTH_URL_TEMPLATE": "带宽测速 URL 模板，{bytes} 将被替换为实际字节数",
 
+    "BANDWIDTH_PROCESS_BUFFER": 2,
+    "_comment_BANDWIDTH_PROCESS_BUFFER": "带宽测速 curl 进程额外缓冲时间（秒）",
+
     "ENABLE_IP_PURITY_CHECK": true,
     "_comment_ENABLE_IP_PURITY_CHECK": "是否在带宽测速后对节点进行纯净度检测（要求 company.abuser_score 和 asn.abuser_score 均为 Low）",
 
     "IP_PURITY_API": "https://api.ipapi.is/",
     "_comment_IP_PURITY_API": "IP 纯净度检测 API 地址",
 
-    "IP_PURITY_WORKERS": 10,
+    "IP_PURITY_WORKERS": 5,
     "_comment_IP_PURITY_WORKERS": "纯净度检测的并发线程数",
 
-    "IP_PURITY_TIMEOUT": 8,
+    "IP_PURITY_TIMEOUT": 5,
     "_comment_IP_PURITY_TIMEOUT": "纯净度 API 请求超时（秒）",
 
     "IP_PURITY_RETRY_MAX": 2,
@@ -111,15 +126,15 @@
     "MAX_WORKERS": 150,
     "_comment_MAX_WORKERS": "TCP 并发测试的最大线程数",
 
-    "AVAILABILITY_WORKERS": 20,
+    "AVAILABILITY_WORKERS": 5,
     "_comment_AVAILABILITY_WORKERS": "可用性检测的并发线程数",
 
-    "BANDWIDTH_WORKERS": 6,
+    "BANDWIDTH_WORKERS": 5,
     "_comment_BANDWIDTH_WORKERS": "带宽测速的并发线程数",
 
     "_comment_retry": "重试策略配置",
-    "DNS_UPDATE_MAX_RETRIES": 5,
-    "DNS_UPDATE_RETRY_DELAY": 10,
-    "GITHUB_SYNC_MAX_RETRIES": 5,
-    "GITHUB_SYNC_RETRY_DELAY": 10
+    "DNS_UPDATE_MAX_RETRIES": 3,
+    "DNS_UPDATE_RETRY_DELAY": 5,
+    "GITHUB_SYNC_MAX_RETRIES": 3,
+    "GITHUB_SYNC_RETRY_DELAY": 5
 }

@@ -39,33 +39,37 @@ def load_config():
         print(f"❌ 错误：配置文件格式不正确 - {e}")
         sys.exit(1)
 
-    # 定义必填字段及其默认值（若配置文件中缺失则使用默认值）
+    # 定义必填字段及其默认值（对齐最新 config.json 中的实际值）
     defaults = {
         "USE_GLOBAL_MODE": True,
-        "GLOBAL_TOP_N": 16,
+        "GLOBAL_TOP_N": 15,
         "PER_COUNTRY_TOP_N": 1,
-        "BANDWIDTH_CANDIDATES": 80,
-        "TCP_PROBES": 7,
+        "BANDWIDTH_CANDIDATES": 45,
+        "TCP_PROBES": 5,
         "MIN_SUCCESS_RATE": 1.0,
         "TIMEOUT": 2.5,
         "FILTER_COUNTRIES_ENABLED": False,
-        "ALLOWED_COUNTRIES": [],
+        "ALLOWED_COUNTRIES": ["US", "HK"],
         "ENABLE_WXPUSHER": True,
         "WXPUSHER_APP_TOKEN": "",
-        "WXPUSHER_UIDS": [],
+        "WXPUSHER_UIDS": [""],
         "WXPUSHER_API_URL": "http://wxpusher.zjiecode.com/api/send/message",
-        "CF_ENABLED": False,
+        "NOTIFY_TIMEOUT": 5,
+        "CF_ENABLED": True,
         "CF_API_TOKEN": "",
         "CF_ZONE_ID": "",
         "CF_DNS_RECORD_NAME": "",
         "CF_TTL": 60,
         "CF_PROXIED": False,
         "JSON_URL": "https://zip.cm.edu.kg/all.txt",
+        "FETCH_MAX_RETRIES": 3,
+        "FETCH_RETRY_DELAY": 5,
+        "FETCH_TIMEOUT": 5,
         "OUTPUT_FILE": "ip.txt",
         "TEST_AVAILABILITY": True,
         "FILTER_IPV6_AVAILABILITY": True,
         "AVAILABILITY_CHECK_API": "https://check-proxyip-api.cmliussss.net/check",
-        "AVAILABILITY_TIMEOUT": 8,
+        "AVAILABILITY_TIMEOUT": 5,
         "AVAILABILITY_RETRY_MAX": 2,
         "AVAILABILITY_RETRY_DELAY": 5,
         "BANDWIDTH_SIZE_MB": 1,
@@ -73,20 +77,21 @@ def load_config():
         "BANDWIDTH_RETRY_MAX": 2,
         "BANDWIDTH_RETRY_DELAY": 5,
         "BANDWIDTH_URL_TEMPLATE": "https://speed.cloudflare.com/__down?bytes={bytes}",
+        "BANDWIDTH_PROCESS_BUFFER": 2,
         "ENABLE_IP_PURITY_CHECK": True,
         "IP_PURITY_API": "https://api.ipapi.is/",
-        "IP_PURITY_WORKERS": 10,
-        "IP_PURITY_TIMEOUT": 8,
+        "IP_PURITY_WORKERS": 5,
+        "IP_PURITY_TIMEOUT": 5,
         "IP_PURITY_RETRY_MAX": 2,
         "IP_PURITY_RETRY_DELAY": 5,
         "IP_PURITY_FALLBACK": True,
         "MAX_WORKERS": 150,
-        "AVAILABILITY_WORKERS": 20,
-        "BANDWIDTH_WORKERS": 6,
-        "DNS_UPDATE_MAX_RETRIES": 5,
-        "DNS_UPDATE_RETRY_DELAY": 10,
-        "GITHUB_SYNC_MAX_RETRIES": 5,
-        "GITHUB_SYNC_RETRY_DELAY": 10
+        "AVAILABILITY_WORKERS": 5,
+        "BANDWIDTH_WORKERS": 5,
+        "DNS_UPDATE_MAX_RETRIES": 3,
+        "DNS_UPDATE_RETRY_DELAY": 5,
+        "GITHUB_SYNC_MAX_RETRIES": 3,
+        "GITHUB_SYNC_RETRY_DELAY": 5
     }
 
     # 用默认值补全缺失字段
@@ -100,7 +105,7 @@ def load_config():
 # 加载配置
 cfg = load_config()
 
-# 从配置中读取各项参数
+# 从配置中读取各项参数（顺序与 config.json 一致）
 USE_GLOBAL_MODE = cfg["USE_GLOBAL_MODE"]
 GLOBAL_TOP_N = cfg["GLOBAL_TOP_N"]
 PER_COUNTRY_TOP_N = cfg["PER_COUNTRY_TOP_N"]
@@ -114,7 +119,17 @@ ENABLE_WXPUSHER = cfg["ENABLE_WXPUSHER"]
 WXPUSHER_APP_TOKEN = cfg["WXPUSHER_APP_TOKEN"]
 WXPUSHER_UIDS = cfg["WXPUSHER_UIDS"]
 WXPUSHER_API_URL = cfg["WXPUSHER_API_URL"]
+NOTIFY_TIMEOUT = cfg["NOTIFY_TIMEOUT"]
+CF_ENABLED = cfg.get("CF_ENABLED", False)
+CF_API_TOKEN = cfg.get("CF_API_TOKEN", "")
+CF_ZONE_ID = cfg.get("CF_ZONE_ID", "")
+CF_DNS_RECORD_NAME = cfg.get("CF_DNS_RECORD_NAME", "")
+CF_TTL = cfg.get("CF_TTL", 60)
+CF_PROXIED = cfg.get("CF_PROXIED", False)
 JSON_URL = cfg["JSON_URL"]
+FETCH_MAX_RETRIES = cfg["FETCH_MAX_RETRIES"]
+FETCH_RETRY_DELAY = cfg["FETCH_RETRY_DELAY"]
+FETCH_TIMEOUT = cfg["FETCH_TIMEOUT"]
 OUTPUT_FILE = cfg["OUTPUT_FILE"]
 TEST_AVAILABILITY = cfg["TEST_AVAILABILITY"]
 FILTER_IPV6_AVAILABILITY = cfg["FILTER_IPV6_AVAILABILITY"]
@@ -127,6 +142,7 @@ BANDWIDTH_TIMEOUT = cfg["BANDWIDTH_TIMEOUT"]
 BANDWIDTH_RETRY_MAX = cfg["BANDWIDTH_RETRY_MAX"]
 BANDWIDTH_RETRY_DELAY = cfg["BANDWIDTH_RETRY_DELAY"]
 BANDWIDTH_URL_TEMPLATE = cfg["BANDWIDTH_URL_TEMPLATE"]
+BANDWIDTH_PROCESS_BUFFER = cfg["BANDWIDTH_PROCESS_BUFFER"]
 ENABLE_IP_PURITY_CHECK = cfg["ENABLE_IP_PURITY_CHECK"]
 IP_PURITY_API = cfg["IP_PURITY_API"]
 IP_PURITY_WORKERS = cfg["IP_PURITY_WORKERS"]
@@ -155,7 +171,7 @@ def send_wxpusher_notification(content, summary):
             "uids": WXPUSHER_UIDS
         }
         headers = {"Content-Type": "application/json; charset=utf-8"}
-        resp = requests.post(WXPUSHER_API_URL, data=json.dumps(payload), headers=headers, timeout=10)
+        resp = requests.post(WXPUSHER_API_URL, data=json.dumps(payload), headers=headers, timeout=NOTIFY_TIMEOUT)
         if resp.status_code == 200:
             print("✅ 微信通知已发送")
         else:
@@ -165,13 +181,13 @@ def send_wxpusher_notification(content, summary):
 
 def fetch_nodes():
     """从远程 TXT 获取所有节点，每行格式：IP:端口#国家，支持自动重试"""
-    max_retries = 5
-    retry_delay = 5
+    max_retries = FETCH_MAX_RETRIES
+    retry_delay = FETCH_RETRY_DELAY
 
     for attempt in range(1, max_retries + 1):
         try:
             print(f"正在请求 {JSON_URL} (尝试 {attempt}/{max_retries}) ...")
-            resp = requests.get(JSON_URL, timeout=10)
+            resp = requests.get(JSON_URL, timeout=FETCH_TIMEOUT)
             resp.raise_for_status()
             # 按行读取，过滤空行和注释
             lines = [line.strip() for line in resp.text.splitlines() if line.strip() and not line.startswith('#')]
@@ -343,7 +359,7 @@ def measure_bandwidth_curl(node_str):
     ]
 
     try:
-        result = subprocess.run(curl_cmd, capture_output=True, text=True, timeout=BANDWIDTH_TIMEOUT + 5)
+        result = subprocess.run(curl_cmd, capture_output=True, text=True, timeout=BANDWIDTH_TIMEOUT + BANDWIDTH_PROCESS_BUFFER)
         if result.returncode == 0 and result.stdout.strip():
             parts = result.stdout.strip().split()
             if len(parts) >= 2:
