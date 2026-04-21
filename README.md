@@ -194,6 +194,7 @@ python3 main.py
 4. （可选）添加 cron 任务：
    ```bash
    (crontab -l 2>/dev/null; echo "0,15,30,45 * * * * cd $(pwd) && nice -n -10 /usr/bin/python3 $(pwd)/main.py >> $(pwd)/cron.log 2>&1") | crontab -
+   ```
 5. 验证：`crontab -l`
 
 </details>
