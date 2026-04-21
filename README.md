@@ -96,16 +96,109 @@
 
 ---
 
+### 🔐 获取必要令牌（重要）
+
+若您希望启用 GitHub 自动推送或 Cloudflare DNS 自动更新，需要提前获取对应令牌。
+
+#### 1. GitHub Personal Access Token（用于自动推送）
+
+1. 登录 GitHub，点击右上角头像 → **Settings** → 左侧边栏 **Developer settings** → **Personal access tokens** → **Tokens (classic)**。
+2. 点击 **Generate new token (classic)**。
+3. 在 **Note** 中填入任意名称（如 `CF-IP-Sync`）。
+4. **Expiration（过期时间）** 选择 **No expiration**（无过期）。
+5. 在 **Select scopes** 中仅勾选 **repo** 及其所有子项（自动勾选）。
+6. 点击 **Generate token**，**立即复制并保存**（离开页面后无法再次查看）。
+
+> ⚠️ 令牌将填入 `git_sync.ps1` 或 `git_sync.sh` 中的 `github_token` 变量。
+
+#### 2. Cloudflare API Token（用于 DNS 批量更新）
+
+1. 登录 Cloudflare，点击右上角头像 → **My Profile** → 左侧 **API Tokens** → **Create Token**。
+2. 点击 **Create Custom Token** 或直接使用 **编辑区域 DNS** 模板。
+3. 配置如下：
+   - **Token name**：任意（如 `CF-DNS-Update`）
+   - **Permissions**：`Zone` → `DNS` → `Edit`
+   - **Zone Resources**：`Include` → `Specific zone` → 选择您要更新的域名
+4. 点击 **Continue to summary** → **Create Token**，**立即复制保存**。
+5. **Zone ID** 可在 Cloudflare 域名概览页面右侧“API”栏目中找到。
+
+> ⚠️ 令牌和 Zone ID 将填入 `config.json` 中 `CF_` 开头的配置项。
+
+#### 3. WxPusher 配置（用于微信通知）
+
+若您希望接收任务执行状态的微信通知，需要提前获取 WxPusher 的 `APP_TOKEN` 和 `UID`。WxPusher 是一个免费的微信消息推送平台，通过其公众号“WxPusher消息推送平台”下发通知。
+
+**第一步：注册账号并创建应用**
+
+1. 访问 [WxPusher 管理后台](http://wxpusher.zjiecode.com/admin/)。
+2. 使用微信扫码登录，新用户首次扫码即自动完成注册。
+3. 登录后，在左侧菜单栏找到并点击 **“应用管理”** -> **“应用信息”**。
+4. 点击 **“新增应用”** 按钮，填写必填项：
+   - **应用名字**：可自定义，例如“Cloudflare IP 优选通知”。
+   - **联系方式**：可选填手机号或微信号。
+   - **推送内容**：简单描述应用用途，例如“接收节点筛选结果”。
+5. 点击“创建”，应用即创建成功。
+
+**第二步：获取 APP_TOKEN**
+
+1. 在应用列表页面，您应该能直接看到新创建的应用及其对应的 **AppToken**。
+2. 如果未能及时保存，可点击左侧菜单 **“应用管理”** -> **“AppToken”** 找到它。
+3. **⚠️ 务必立即复制并妥善保存此 AppToken**（类似 `AT_xxxxxxxxxxxxxx`），它只完整显示一次。
+
+**第三步：获取接收通知的 UID**
+
+1. 在左侧菜单栏，点击 **“应用管理”** -> **“关注应用”**，找到您应用的关注二维码。
+2. 打开手机微信，扫描此二维码，并**关注“WxPusher消息推送平台”公众号**。
+3. 关注成功后，**UID** 可以通过以下任一方式获取：
+   - **方式一（推荐）**：在微信里打开“WxPusher消息推送平台”公众号，点击右下角菜单 **“我的”** -> **“我的UID”**，即可看到您的 UID。
+   - **方式二**：回到 WxPusher 管理后台，点击左侧 **“用户管理”** -> **“用户列表”**，也能看到刚关注的用户及其 UID（格式为 `UID_xxxxxx`）。
+
+**第四步：填入配置文件**
+
+将获取到的 **APP_TOKEN** 和 **UID** 填入 `config.json` 的对应字段中：
+
+```json
+"ENABLE_WXPUSHER": true,
+"WXPUSHER_APP_TOKEN": "AT_xxxxxx",
+"WXPUSHER_UIDS": ["UID_xxxxxx"]
+```
+
+> 💡 若不需要通知，将 `ENABLE_WXPUSHER` 设为 `false` 即可。
+
+---
+
 ### Windows 部署
 
 #### 自动部署（推荐）
 
-右键点击 **`setup.ps1`**，选择 **“使用 PowerShell 运行”**（请以管理员身份运行）。  
+由于 PowerShell 脚本默认无法直接提权，请严格按照以下步骤操作：
+
+1. **以管理员身份启动 PowerShell**  
+   按 `Win + X`，选择 **“Windows PowerShell (管理员)”** 或 **“终端 (管理员)”**。  
+   在弹出的用户账户控制（UAC）窗口中点击 **“是”**。
+
+2. **进入项目目录**  
+   在 PowerShell 窗口中输入 `cd` 命令，后跟项目文件夹的完整路径。例如：
+   ```powershell
+   cd "C:\Users\你的用户名\Desktop\cfnb"
+   ```
+
+3. **临时解除脚本执行限制（如需要）**  
+   如果系统提示“无法加载文件，因为在此系统上禁止运行脚本”，请先执行：
+   ```powershell
+   Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+   ```
+
+4. **运行部署脚本**  
+   ```powershell
+   .\setup.ps1
+   ```
+
 脚本会自动完成以下操作：
-- 检测并安装 Python、Git、curl
+- 检测并安装 Python、Git、curl（通过 winget）
 - 安装 Python 依赖 `requests`
 - 创建 `.gitignore` 保护敏感文件
-- 创建 Windows 计划任务，每 15 分钟运行一次 `main.py`
+- 创建 Windows 计划任务，每 15 分钟运行一次 `main.py`（**从下一个整15分钟开始，无限期重复**）
 
 #### 手动部署
 
@@ -139,7 +232,7 @@ sudo ./setup.sh
 - 检测包管理器（apt/yum/dnf/pacman）并安装 Python3、pip、Git、curl
 - 安装 Python 依赖 `requests`
 - 创建 `.gitignore` 保护敏感文件
-- 添加 cron 定时任务，每 15 分钟运行一次 `main.py`
+- 添加 cron 定时任务，每 15 分钟运行一次 `main.py`（整点15分对齐）
 
 #### 手动部署
 
@@ -158,7 +251,7 @@ sudo ./setup.sh
    ```
 4. （可选）手动添加 cron 任务：
    ```bash
-   (crontab -l 2>/dev/null; echo "*/15 * * * * cd $(pwd) && /usr/bin/python3 $(pwd)/main.py >> $(pwd)/cron.log 2>&1") | crontab -
+   (crontab -l 2>/dev/null; echo "0,15,30,45 * * * * cd $(pwd) && /usr/bin/python3 $(pwd)/main.py >> $(pwd)/cron.log 2>&1") | crontab -
    ```
 
 #### 运行测试
@@ -172,10 +265,10 @@ python3 main.py
 
 ## 🕒 定时自动运行说明
 
-| 平台 | 方式 | 默认频率 |
-| :--- | :--- | :--- |
-| Windows | 任务计划程序（任务名：`Cloudflare IP 优选`） | 每 15 分钟 |
-| Linux | cron 定时任务 | 每 15 分钟 |
+| 平台 | 方式 | 默认频率 | 行为 |
+| :--- | :--- | :--- | :--- |
+| Windows | 任务计划程序（任务名：`Cloudflare IP 优选`） | 每 15 分钟 | **从下一个整15分钟开始，无限期永久重复**，不因跨天重置 |
+| Linux | cron 定时任务 | 每 15 分钟 | 分钟字段为 `0,15,30,45`，每整点15分钟运行一次 |
 
 **日志查看**：
 - Windows：可在任务计划程序中查看历史运行状态。
@@ -272,6 +365,8 @@ python3 main.py
 | `WXPUSHER_APP_TOKEN` | `string` | `""` | **【必填】** WxPusher 的 APP_TOKEN。请从 [WxPusher 管理后台](https://wxpusher.zjiecode.com/admin/) 获取。 |
 | `WXPUSHER_UIDS` | `array` | `[""]` | **【必填】** 接收通知的用户 UID 列表。请从 WxPusher 获取您的 UID 并填入。 |
 | `WXPUSHER_API_URL` | `string` | `"http://wxpusher.zjiecode.com/api/send/message"` | 消息发送 API 地址，一般无需修改。 |
+
+> 💡 若不需要通知，将 `ENABLE_WXPUSHER` 设为 `false` 即可。
 
 ### Cloudflare DNS 批量更新参数
 
@@ -407,6 +502,9 @@ python3 main.py
 
 8. **为什么我的 DNS 记录数量少于 `GLOBAL_TOP_N`？**  
    如果您启用了 `FILTER_IPV6_AVAILABILITY`，且候选池中落地 IPv4 的节点总数不足目标数量，则 DNS 只会更新实际可用的节点数。这是正常现象，您可以通过增加 `BANDWIDTH_CANDIDATES` 来扩大候选池。
+
+9. **GitHub 推送时提示权限错误或 403**  
+   - 请确认 `git_sync.ps1` / `git_sync.sh` 中的令牌具有 `repo` 权限，且未过期。创建令牌时务必勾选 **repo** 全部子项，并将过期时间设为 **No expiration**。
 
 ---
 
