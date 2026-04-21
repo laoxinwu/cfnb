@@ -50,13 +50,13 @@
 
 | 文件 | 说明 |
 | :--- | :--- |
-| `main.py` | **核心程序**：负责抓取节点、TCP 测试、可用性检测、带宽测速、纯净度检测、保存结果、更新 DNS、推送 GitHub。 |
-| `config.json` | **配置文件**：所有运行参数均在此修改（含详细注释）。 |
-| `git_sync.ps1` | **Windows 推送脚本**：用于将 `ip.txt` 强制推送到 GitHub。 |
-| `git_sync.sh` | **Linux 推送脚本**：用于将 `ip.txt` 强制推送到 GitHub。 |
-| `setup.ps1` | **Windows 一键部署脚本**：自动安装依赖、配置计划任务（需管理员权限）。 |
-| `setup.sh` | **Linux 一键部署脚本**：自动安装依赖、配置 cron 定时任务（需 root 权限）。 |
-| `ip.txt` | **输出结果**：程序运行后生成的优选节点列表（每次运行会覆盖）。 |
+| `main.py` | 核心优选程序（抓取、测试、筛选、更新、推送） |
+| `config.json` | 所有运行参数的配置文件（含详细注释） |
+| `git_sync.ps1` | Windows 推送脚本（强制推送 `ip.txt` 到 GitHub） |
+| `git_sync.sh` | Linux 推送脚本（强制推送 `ip.txt` 到 GitHub） |
+| `setup.ps1` | Windows 一键部署脚本（安装依赖并配置计划任务） |
+| `setup.sh` | Linux 一键部署脚本（安装依赖并配置 cron） |
+| `ip.txt` | 最终优选节点列表（每次运行覆盖） |
 
 ---
 
@@ -76,32 +76,17 @@
 ### 通用前置步骤
 
 1. **获取项目文件**  
-   通过 Git 克隆或直接下载 ZIP 压缩包并解压：
    ```bash
    git clone https://github.com/你的用户名/仓库名.git
    cd 仓库名
    ```
 
-2. **配置微信通知（可选）**  
-   编辑 `config.json`，填写 WxPusher 的 `WXPUSHER_APP_TOKEN` 和 `WXPUSHER_UIDS`。  
-   若不需要通知，可将 `ENABLE_WXPUSHER` 设为 `false`。
+2. **配置各项令牌（见下一节）**  
+   根据需求获取并填写 GitHub Token、Cloudflare API Token 和 WxPusher 凭证。
 
-3. **配置 GitHub 自动推送（可选）**  
-   根据你的操作系统，编辑对应的推送脚本：
-   - **Windows**：编辑 `git_sync.ps1`
-   - **Linux**：编辑 `git_sync.sh`
-   
-   修改以下四项为你的真实信息：
-   ```text
-   github_token="你的 GitHub Personal Access Token"
-   github_username="你的 GitHub 用户名"
-   repo_name="仓库名"
-   branch="分支名"
-   ```
-   若不需要推送到 GitHub，可在 `config.json` 中将 `GITHUB_SYNC_MAX_RETRIES` 设为 `0` 并手动注释 `main.py` 末尾的 `sync_to_github()` 调用（通常无需修改）。
-
-4. **配置 Cloudflare DNS 自动更新（可选）**  
-   如需将优选 IP 自动更新到 Cloudflare DNS，请参考下方 [Cloudflare DNS 批量更新参数](#cloudflare-dns-批量更新参数) 获取 API 令牌及 Zone ID，并填写 `config.json` 中 `CF_` 开头的相关配置项。
+3. **（可选）关闭不需要的功能**  
+   - 无需微信通知：`config.json` 中设 `ENABLE_WXPUSHER: false`  
+   - 无需 GitHub 推送：`config.json` 中设 `GITHUB_SYNC_MAX_RETRIES: 0`
 
 ---
 
@@ -127,10 +112,10 @@
 | 步骤 | 操作 |
 | :--- | :--- |
 | **启动管理员 PowerShell** | 按 `Win + X`，选择 **“Windows PowerShell (管理员)”** 或 **“终端 (管理员)”** |
-| **进入项目目录** | `cd "C:\Users\你的用户名\Desktop\cfnb"` |
+| **进入项目目录** | `cd "C:\你的项目路径\cfnb"` |
 | **解除执行限制（如需要）** | `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` |
 | **运行部署脚本** | `.\setup.ps1` |
-| **编辑推送脚本** | 编辑 `git_sync.ps1`，填入你的 GitHub 令牌等信息 |
+| **编辑推送脚本** | 编辑 `git_sync.ps1`，填入 GitHub 令牌等信息 |
 | **测试运行** | `python main.py` |
 
 脚本自动完成：安装 Python/Git/curl、requests 库、创建 .gitignore、配置计划任务（下个整 15 分开始，无限期重复）。
@@ -142,7 +127,7 @@
 | **进入项目目录** | `cd /path/to/cfnb` |
 | **赋予执行权限** | `chmod +x setup.sh` |
 | **运行部署脚本** | `sudo ./setup.sh` |
-| **编辑推送脚本** | 编辑 `git_sync.sh`，填入你的 GitHub 令牌等信息 |
+| **编辑推送脚本** | 编辑 `git_sync.sh`，填入 GitHub 令牌等信息 |
 | **测试运行** | `python3 main.py` |
 
 脚本自动完成：检测包管理器安装 Python3/pip/Git/curl、requests 库、创建 .gitignore、配置 cron 定时任务（整点 15 分对齐）。
@@ -152,20 +137,17 @@
 
 #### Windows 手动部署
 
-1. 安装 [Python 3](https://www.python.org/downloads/)（安装时务必勾选 “Add Python to PATH”）。
-2. 安装 [Git](https://git-scm.com/download/win)（默认选项即可）。
-3. 安装 [curl](https://curl.se/windows/)（选择适合你系统的版本，并将 curl.exe 所在目录添加到系统 PATH 环境变量）。
-4. 在项目目录地址栏输入 `cmd` 并回车，打开命令提示符，执行以下命令安装 Python 依赖：
+1. 安装 [Python 3](https://www.python.org/downloads/)（勾选 “Add Python to PATH”）。
+2. 安装 [Git](https://git-scm.com/download/win) 和 [curl](https://curl.se/windows/)（curl 需加入 PATH）。
+3. 在项目目录打开命令提示符，安装依赖：
    ```cmd
    pip install requests
    ```
-5. （可选）手动创建计划任务：
+4. （可选）手动创建计划任务：
    - 按 `Win + R`，输入 `taskschd.msc` 打开任务计划程序。
-   - 点击右侧“创建任务”，按 `setup.ps1` 中的配置填写：
-     - 常规：名称 `Cloudflare IP 优选`，勾选“不管用户是否登录都要运行”和“使用最高权限运行”。
-     - 触发器：新建 → 开始任务“按预定计划” → 设置“一次”，开始时间为下一个整15分钟时刻；高级设置中勾选“重复任务间隔”，选择“15分钟”，持续时间“无限期”。
-     - 操作：新建 → 操作“启动程序”，程序或脚本填写 `python.exe` 的完整路径，添加参数填写 `main.py` 的完整路径，起始于填写项目目录。
-   - 点击确定，输入 Windows 登录密码保存。
+   - 创建任务，名称 `Cloudflare IP 优选`，勾选“不管用户是否登录都要运行”和“使用最高权限运行”。
+   - 触发器：新建 → 开始任务“按预定计划” → 设置“一次”，开始时间为下一个整15分钟时刻；高级设置中勾选“重复任务间隔”，选择“15分钟”，持续时间“无限期”。
+   - 操作：新建 → 操作“启动程序”，程序填写 `python.exe` 路径，参数填写 `main.py` 完整路径，起始于填写项目目录。
 
 #### Linux 手动部署
 
@@ -174,28 +156,19 @@
    sudo apt update
    sudo apt install -y python3 python3-pip git curl
    ```
-   其他发行版请使用对应的包管理器（yum/dnf/pacman）安装同名软件包。
-
 2. 安装 Python 依赖：
    ```bash
    pip3 install requests
    ```
-
-3. 赋予推送脚本执行权限（如果需要 GitHub 自动同步）：
+3. 赋予推送脚本执行权限（如果需要）：
    ```bash
    chmod +x git_sync.sh
    ```
-
-4. （可选）手动添加 cron 定时任务：
+4. （可选）添加 cron 任务：
    ```bash
    (crontab -l 2>/dev/null; echo "0,15,30,45 * * * * cd $(pwd) && /usr/bin/python3 $(pwd)/main.py >> $(pwd)/cron.log 2>&1") | crontab -
    ```
-   如需修改运行频率，调整分钟字段即可（例如 `*/10` 表示每 10 分钟）。
-
-5. 验证 cron 任务是否添加成功：
-   ```bash
-   crontab -l
-   ```
+5. 验证：`crontab -l`
 
 </details>
 
@@ -205,12 +178,12 @@
 
 | 平台 | 方式 | 行为 |
 | :--- | :--- | :--- |
-| Windows | 计划任务 `Cloudflare IP 优选` | 从下一个整 15 分钟开始（如 17:47 → 18:00），之后每 15 分钟**永久重复**，不因跨天重置 |
-| Linux | cron 定时任务 | 分钟字段为 `0,15,30,45`，每小时的整 15 分钟运行一次 |
+| Windows | 计划任务 `Cloudflare IP 优选` | 从下一个整 15 分钟开始，之后每 15 分钟**永久重复** |
+| Linux | cron 定时任务 | 分钟字段 `0,15,30,45`，整点对齐 |
 
 **日志查看**：
-- Windows：可在任务计划程序中查看历史运行状态。
-- Linux：日志输出至项目目录下的 `cron.log`，使用 `tail -f cron.log` 实时查看。
+- Windows：任务计划程序中查看历史记录。
+- Linux：`tail -f cron.log`
 
 ---
 
@@ -219,9 +192,9 @@
 > [!NOTE]
 > **运行环境说明**  
 > 本工具默认参数基于 **2核2G 云服务器** 环境稳定测试通过。  
-> 若您在 **软路由（如 OpenWrt）、树莓派或低配置 PC** 上运行，建议适当降低并发参数（如 `MAX_WORKERS`、`BANDWIDTH_WORKERS`），避免因资源不足导致测试超时或系统卡顿。具体调优建议请参考下文各参数的详细说明。
+> 若您在 **软路由（如 OpenWrt）、树莓派或低配置 PC** 上运行，建议适当降低并发参数（如 `MAX_WORKERS`、`BANDWIDTH_WORKERS`）。
 
-所有运行参数均集中在 `config.json` 文件中。以下为 **每一个配置项** 的详细说明，您可根据自身网络环境和需求进行调整。
+所有运行参数均集中在 `config.json` 文件中。以下为 **每一个配置项** 的详细说明。
 
 ### 筛选模式与数量控制
 
@@ -332,10 +305,9 @@
 </details>
 
 > 💡 **配置建议**：  
-> - 对于大多数用户，仅需修改 `ALLOWED_COUNTRIES`、`WXPUSHER_APP_TOKEN` 和 `WXPUSHER_UIDS` 即可满足需求。  
-> - 如需启用 DNS 更新，请仔细阅读下方“Cloudflare DNS 批量更新说明”并正确填写 `CF_*` 参数。  
-> - 若网络环境较差，可适当增加 `TCP_PROBES` 和 `TIMEOUT`，并降低 `MIN_SUCCESS_RATE` 和 `MAX_WORKERS`。  
-> - 若希望更快获得结果，可减少 `BANDWIDTH_CANDIDATES` 或 `BANDWIDTH_SIZE_MB`。
+> - 大多数用户仅需修改 `ALLOWED_COUNTRIES`、`WXPUSHER_APP_TOKEN` 和 `WXPUSHER_UIDS`。  
+> - 启用 DNS 更新请正确填写 `CF_*` 参数。  
+> - 网络不稳定时可增加 `TCP_PROBES` 和 `TIMEOUT`，降低 `MIN_SUCCESS_RATE` 和 `MAX_WORKERS`。
 
 ---
 
@@ -426,7 +398,7 @@
 2. **带宽测速被跳过**  
    请确保系统已安装 `curl` 且位于 PATH 环境变量中。
 
-6. **Linux 下 `git_sync.sh` 权限被拒绝**  
+3. **Linux 下 `git_sync.sh` 权限被拒绝**  
    执行 `chmod +x git_sync.sh` 赋予执行权限。
 
 </details>
@@ -439,7 +411,7 @@
    - 确保 Token 具备 `repo` 权限。
    - 确认本地 Git 已正确配置用户信息（`git config --global user.name/email`）。
 
-9. **GitHub 推送时提示权限错误或 403**  
+5. **GitHub 推送时提示权限错误或 403**  
    - 请确认令牌具有 `repo` 权限，且未过期。创建令牌时务必勾选 **repo** 全部子项，并将过期时间设为 **No expiration**。
 
 </details>
@@ -447,13 +419,13 @@
 <details>
 <summary>☁️ Cloudflare DNS 更新</summary>
 
-5. **Cloudflare DNS 更新失败**  
+6. **Cloudflare DNS 更新失败**  
    - 检查 `CF_API_TOKEN` 是否有效且具有 Zone:DNS:Edit 权限。
    - 检查 `CF_ZONE_ID` 是否正确。
    - 检查 `CF_DNS_RECORD_NAME` 是否为完整的子域名且已托管在 Cloudflare。
    - 脚本自带 5 次重试机制，若全部失败会通过微信通知。
 
-8. **为什么我的 DNS 记录数量少于 `GLOBAL_TOP_N`？**  
+7. **为什么我的 DNS 记录数量少于 `GLOBAL_TOP_N`？**  
    如果您启用了 `FILTER_IPV6_AVAILABILITY`，且候选池中落地 IPv4 的节点总数不足目标数量，则 DNS 只会更新实际可用的节点数。这是正常现象，您可以通过增加 `BANDWIDTH_CANDIDATES` 来扩大候选池。
 
 </details>
@@ -461,7 +433,7 @@
 <details>
 <summary>🔍 检测与过滤</summary>
 
-3. **可用性检测或纯净度检测全部失败**  
+8. **可用性检测或纯净度检测全部失败**  
    若 API 接口异常，程序会自动跳过此步骤并回退到 TCP 筛选结果，同时发送微信提醒（如已配置）。纯净度检测还可通过 `IP_PURITY_FALLBACK` 控制是否降级。
 
 </details>
@@ -469,7 +441,7 @@
 <details>
 <summary>🔒 隐私与其他</summary>
 
-7. **隐私保护**  
+9. **隐私保护**  
    自动生成的 `.gitignore` 文件会忽略 `config.json`、`git_sync.ps1` 和 `git_sync.sh`，防止敏感信息被提交到公开仓库。
 
 </details>
