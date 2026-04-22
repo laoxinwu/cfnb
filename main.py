@@ -77,8 +77,12 @@ def load_config():
         "AVAILABILITY_RETRY_DELAY": 5,
         "FILTER_IPV6_AVAILABILITY": True,
         "FILTER_BLOCKED_COUNTRIES_ENABLED": True,
-        "BLOCKED_COUNTRIES": ["CN", "HK", "MO", "RU", "TW"],
-        "ENABLE_IP_PURITY_CHECK": True,
+        "BLOCKED_COUNTRIES": [
+    "BD", "BI", "BY", "CD", "CF", "CN", "CU", "DE", "ET", "HK",
+    "IR", "KP", "LY", "MO", "NG", "NL", "PK", "RU", "SD", "SO",
+    "SY", "TH", "TW", "UA", "VE", "VN", "YE", "ZW"
+],
+        "ENABLE_IP_PURITY_CHECK": False,
         "IP_PURITY_API": "https://api.ipapi.is/",
         "IP_PURITY_WORKERS": 5,
         "IP_PURITY_TIMEOUT": 5,
@@ -553,6 +557,12 @@ def batch_update_cloudflare_dns(ip_list, ip_info=None, full_bw_results=None, tar
             blocked_set = {c.upper() for c in cfg.get("BLOCKED_COUNTRIES", [])}
 
         for node_str, speed in full_bw_results:
+            # 0. 仅允许端口 443 的节点（非 443 端口直接淘汰）
+            if ':' in node_str:
+                port = node_str.split(':')[1].split('#')[0]
+                if port != '443':
+                    continue
+
             # 1. 先过滤 IPv6 落地（如果启用）
             if cfg.get("FILTER_IPV6_AVAILABILITY", False):
                 returned_ip = ip_info.get(node_str, "")

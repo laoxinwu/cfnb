@@ -253,7 +253,10 @@ python3 main.py
 | 参数 | 类型 | 默认值 | 说明 |
 | :--- | :--- | :--- | :--- |
 | `FILTER_BLOCKED_COUNTRIES_ENABLED` | `boolean` | `true` | 是否在 DNS 更新阶段屏蔽特定国家的节点 |
-| `BLOCKED_COUNTRIES` | `array` | `["CN", "HK", "MO", "RU", "TW"]` | DNS 更新时需要屏蔽的国家代码列表 |
+| `BLOCKED_COUNTRIES` | `array` | `["BD", "BI", "BY", "CD", "CF", "CN", "CU", "DE", "ET", "HK",
+    "IR", "KP", "LY", "MO", "NG", "NL", "PK", "RU", "SD", "SO",
+    "SY", "TH", "TW", "UA", "VE", "VN", "YE", "ZW"
+]` | DNS 更新时需要屏蔽的国家代码列表 |
 
 > **说明**：  
 > - 该过滤**仅作用于 Cloudflare DNS 批量更新环节**，不会影响 `ip.txt` 的内容和 GitHub 推送。  
@@ -329,7 +332,7 @@ python3 main.py
 
 | 参数 | 类型 | 默认值 | 说明 |
 | :--- | :--- | :--- | :--- |
-| `ENABLE_IP_PURITY_CHECK` | `boolean` | `true` | 是否进行 IP 纯净度检测（**仅作用于 DNS 更新**） |
+| `ENABLE_IP_PURITY_CHECK` | `boolean` | `false` | 是否进行 IP 纯净度检测（**仅作用于 DNS 更新**） |
 | `IP_PURITY_API` | `string` | `"https://api.ipapi.is/"` | 纯净度检测 API 地址 |
 | `IP_PURITY_WORKERS` | `int` | `5` | 纯净度检测并发数 |
 | `IP_PURITY_TIMEOUT` | `int` | `5` | 纯净度 API 读取超时（秒） |

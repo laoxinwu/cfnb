@@ -106,10 +106,14 @@
     "FILTER_BLOCKED_COUNTRIES_ENABLED": true,
     "_comment_FILTER_BLOCKED_COUNTRIES_ENABLED": "【仅DNS】是否屏蔽特定国家的节点",
 
-    "BLOCKED_COUNTRIES": ["CN", "HK", "MO", "RU", "TW"],
+    "BLOCKED_COUNTRIES": [
+    "BD", "BI", "BY", "CD", "CF", "CN", "CU", "DE", "ET", "HK",
+    "IR", "KP", "LY", "MO", "NG", "NL", "PK", "RU", "SD", "SO",
+    "SY", "TH", "TW", "UA", "VE", "VN", "YE", "ZW"
+],
     "_comment_BLOCKED_COUNTRIES": "【仅DNS】需要屏蔽的国家代码列表",
 
-    "ENABLE_IP_PURITY_CHECK": true,
+    "ENABLE_IP_PURITY_CHECK": false,
     "_comment_ENABLE_IP_PURITY_CHECK": "【仅DNS】是否对节点进行纯净度检测（要求滥用评分均为 Low）",
 
     "IP_PURITY_API": "https://api.ipapi.is/",
