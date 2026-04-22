@@ -253,11 +253,11 @@ python3 main.py
 | 参数 | 类型 | 默认值 | 说明 |
 | :--- | :--- | :--- | :--- |
 | `FILTER_BLOCKED_COUNTRIES_ENABLED` | `boolean` | `true` | 是否在 DNS 更新阶段屏蔽特定国家的节点 |
-| `BLOCKED_COUNTRIES` | `array` | `BD, BI, BY, CD, CF, CN, CU, DE, ET, HK,`<br>`IR, KP, LY, MO, NG, NL, PK, RU, SD, SO,`<br>`SY, TH, TW, UA, VE, VN, YE, ZW` | DNS 更新时需要屏蔽的国家代码列表 |
+| `BLOCKED_COUNTRIES` | `array` | `BD, BI, BY, CD, CF, CN, CU, DE, ET, HK,`<br>`IR, KP, LY, MO, NG, NL, PK, RU, SD, SO,`<br>`SY, TH, TW, UA, VE, VN, YE, ZW` | DNS 更新时需要屏蔽的国家代码列表（共 28 个） |
 
 > **说明**：  
 > - 该过滤**仅作用于 Cloudflare DNS 批量更新环节**，不会影响 `ip.txt` 的内容和 GitHub 推送。  
-> - 在构建 DNS 更新列表时，系统会**先**应用 `FILTER_IPV6_AVAILABILITY` 过滤落地 IPv6 节点，**再**应用本屏蔽过滤移除指定国家的节点，最终选取前 N 个符合条件的 IP 写入 DNS 记录。
+> - DNS 更新过滤顺序：**端口 443 → 出站延迟阈值 → IPv6 落地 → 屏蔽国家**。
 
 ### 微信通知（WxPusher）参数
 
@@ -306,12 +306,16 @@ python3 main.py
 | 参数 | 类型 | 默认值 | 说明 |
 | :--- | :--- | :--- | :--- |
 | `TEST_AVAILABILITY` | `boolean` | `true` | 是否进行可用性二次筛选 |
-| `FILTER_IPV6_AVAILABILITY` | `boolean` | `true` | DNS 更新时是否过滤落地 IPv6 |
-| `AVAILABILITY_CHECK_API` | `string` | `"https://check-proxyip-api.cmliussss.net/check"` | 可用性检测 API 地址 |
+| `AVAILABILITY_CHECK_API` | `string` | `"https://api.check.proxyip.cmliussss.net/check"` | 可用性检测 API 地址 |
 | `AVAILABILITY_TIMEOUT` | `int` | `5` | 可用性 API 读取超时（秒） |
 | `AVAILABILITY_CONNECT_TIMEOUT` | `int` | `5` | 可用性 API 连接超时（秒） |
 | `AVAILABILITY_RETRY_MAX` | `int` | `2` | 可用性检测最大重试轮数 |
 | `AVAILABILITY_RETRY_DELAY` | `int` | `5` | 可用性检测重试间隔（秒） |
+| `AVAILABILITY_PROBES` | `int` | `3` | 每个节点可用性检测的 API 请求次数，取最小延迟对应的协议栈结果 |
+| `AVAILABILITY_MAX_DELAY_THRESHOLD` | `int` | `0` | **仅作用于 DNS**：出站延迟阈值（毫秒），高于此值的节点不写入 DNS（0 表示不启用） |
+| `FILTER_IPV6_AVAILABILITY` | `boolean` | `true` | **仅作用于 DNS**：是否过滤落地仅 IPv6 的节点（`ipv6_only`） |
+
+> 💡 IPv6 过滤逻辑：通过 API 返回的 `inferred_stack` 判断，仅淘汰 `ipv6_only` 节点，保留 `ipv4_only` 和 `dual_stack` 节点。
 
 **带宽测速参数**
 
@@ -329,7 +333,7 @@ python3 main.py
 
 | 参数 | 类型 | 默认值 | 说明 |
 | :--- | :--- | :--- | :--- |
-| `ENABLE_IP_PURITY_CHECK` | `boolean` | `false` | 是否进行 IP 纯净度检测（**仅作用于 DNS 更新**） |
+| `ENABLE_IP_PURITY_CHECK` | `boolean` | `false` | **仅作用于 DNS**：是否进行 IP 纯净度检测（要求滥用评分均为 Low） |
 | `IP_PURITY_API` | `string` | `"https://api.ipapi.is/"` | 纯净度检测 API 地址 |
 | `IP_PURITY_WORKERS` | `int` | `5` | 纯净度检测并发数 |
 | `IP_PURITY_TIMEOUT` | `int` | `5` | 纯净度 API 读取超时（秒） |
@@ -361,6 +365,7 @@ python3 main.py
 > 💡 **快速配置建议**  
 > - 通常只需修改 `ALLOWED_COUNTRIES`、`WXPUSHER_APP_TOKEN`、`WXPUSHER_UIDS`。  
 > - 启用 DNS 更新需正确填写 `CF_API_TOKEN`、`CF_ZONE_ID`、`CF_DNS_RECORD_NAME`。  
+> - 若希望 DNS 记录只保留出站延迟较低的节点，可设置 `AVAILABILITY_MAX_DELAY_THRESHOLD`（如 `50`）。  
 > - 网络不稳定时可 ↑ `TCP_PROBES` / `TIMEOUT`，↓ `MIN_SUCCESS_RATE` / `MAX_WORKERS`。  
 > - 希望更快出结果可 ↓ `BANDWIDTH_CANDIDATES` 或 `BANDWIDTH_SIZE_MB`。
 
