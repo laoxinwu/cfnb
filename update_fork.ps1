@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     一键同步 fork 并安全合并令牌（Windows 最终分发版）
     前置条件：config.json、git_sync.ps1 中已填写真实令牌
